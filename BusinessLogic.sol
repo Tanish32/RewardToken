@@ -6,7 +6,7 @@ import "./ERC20Token.sol";  // Import the ERC20Token contract
 contract BusinessLogic {
     ERC20Token public tokenContract;
     address public owner;
-    address public unspentAddress;  // Burn or store address
+    address public unspentAddress  = 0xdD870fA1b7C4700F2BD7f44238821C26f7392148;  // Burn or store address
     mapping(address => bool) internal purchaseValidated;
     mapping(address => uint256) public discountRate;  // Maps customer address to discount rate
 
@@ -17,7 +17,6 @@ contract BusinessLogic {
     constructor(address _tokenContract) {
         tokenContract = ERC20Token(_tokenContract);
         owner = msg.sender;
-        unspentAddress = 0xdD870fA1b7C4700F2BD7f44238821C26f7392148;
     }
 
     modifier onlyOwner() {
