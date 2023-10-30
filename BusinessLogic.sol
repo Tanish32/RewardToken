@@ -1,17 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./ERC20Token.sol";
+import "./ERC20Token.sol"; // Import the ERC20Token contract
 
 contract BusinessLogic {
-    ERC20Token public token;
-    mapping(address => uint256) public discounts;
+    ERC20Token public tokenContract;
     address public owner;
-    address public unspentAddress = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4; // Replace this with a proper unspent address
+    address public unspentAddress; // An example burn address
+    string public symboll;
+    mapping(address => bool) public purchaseValidated;
 
-    constructor(address _tokenAddress) {
-        token = ERC20Token(_tokenAddress);
+    event TokensAwarded(address indexed customer, uint256 amount);
+    event DiscountUsed(address indexed customer, uint256 discount);
+
+    constructor(address _tokenContract) {
+        tokenContract = ERC20Token(_tokenContract);
         owner = msg.sender;
+        unspentAddress = owner;
     }
 
     modifier onlyOwner() {
@@ -19,30 +24,38 @@ contract BusinessLogic {
         _;
     }
 
-    function rewardCustomerFromOwner(address customer,  uint256 tokensToGive) public onlyOwner {
-        //uint256 amountPaid,
-        // Business Logic for purchase
-        // Transfer tokens to customer
-        require(token.transferFrom(owner, customer, tokensToGive), "Transfer failed");
-
-        // Calculate discounts
-        if (tokensToGive >= 20) {
-            discounts[customer] = 25;
-        } else if (tokensToGive >= 10) {
-            discounts[customer] = 10;
-        }
+    function  test() public view returns(uint256){
+        return tokenContract.balanceOf(address(msg.sender));
+    }
+    // function test1() public{
+    //     tokenContract.approve(msg.sender, 10000000000000000);
+    // }
+    function test2(address _to, uint256 _value) public payable {
+        tokenContract.transferFrom(msg.sender, _to, _value);
+        emit TokensAwarded(_to, _value);
+    }
+    function validatePurchase(address customer, uint256 amount) external payable onlyOwner {
+        //, uint256 amount
+        require(!purchaseValidated[customer], "Purchase already validated");
+        purchaseValidated[customer] = true;
+        // Award tokens after purchase validation
+        require(tokenContract.transferFrom(msg.sender,customer, amount), "Token transfer failed");
+        // emit TokensAwarded(customer, amount);
     }
 
-    function useDiscount(address customer) public onlyOwner {
-        uint256 discountRate = discounts[customer];
-        require(discountRate > 0, "No discount available");
+    function useDiscount(address customer, uint256 tokenAmount) external {
+        require(purchaseValidated[customer], "Purchase not validated");
+        require(tokenContract.balanceOf(customer) >= tokenAmount, "Insufficient tokens");
 
-        uint256 tokensToUse = (discountRate == 25) ? 20 : 10;
+        // Calculate discount based on token amount
+        uint256 discount = 0;
+        if (tokenAmount == 10) {
+            discount = 10;
+        } else if (tokenAmount == 20) {
+            discount = 25;
+        } // Add more conditions here
 
-        // Transfer tokens to an unspent address
-        require(token.transferFrom(customer, unspentAddress, tokensToUse), "Transfer failed");
-
-        // Reset discount
-        discounts[customer] = 0;
+        require(tokenContract.transferFrom(customer, unspentAddress, tokenAmount), "Token deduction from customer failed");
+        emit DiscountUsed(customer, discount);
     }
 }
