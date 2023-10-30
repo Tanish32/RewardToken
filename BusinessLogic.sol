@@ -7,7 +7,7 @@ contract BusinessLogic {
     ERC20Token public tokenContract;
     address public owner;
     address public unspentAddress;  // Burn or store address
-    mapping(address => bool) public purchaseValidated;
+    mapping(address => bool) internal purchaseValidated;
     mapping(address => uint256) public discountRate;  // Maps customer address to discount rate
 
     event TokensAwarded(address indexed customer, uint256 amount);
@@ -17,7 +17,7 @@ contract BusinessLogic {
     constructor(address _tokenContract) {
         tokenContract = ERC20Token(_tokenContract);
         owner = msg.sender;
-        unspentAddress = owner;
+        unspentAddress = 0xdD870fA1b7C4700F2BD7f44238821C26f7392148;
     }
 
     modifier onlyOwner() {
@@ -57,6 +57,7 @@ contract BusinessLogic {
         
         //rewarding the customer with 10 tokens
         validatePurchase(msg.sender, 10);
+        discountRate[msg.sender] = 0;
     }
 
     // To be called when a customer wants to use tokens for a discount . i.e to be called before purcaseProduct
