@@ -42,8 +42,8 @@ This contract handles:
 ### Requirements
 
 - Remix Web IDE
-- MetaMask or another Web3 provider
-- Ether for testing
+- Remix EVM environment 
+- Ether (provied by remix)
 
 ### Installation
 
@@ -51,6 +51,7 @@ This contract handles:
 2. Paste the contract codes.
 3. Compile both contracts using the Remix IDE.
 4. Deploy `ERC20Token` first, then `BusinessLogic`, providing the `ERC20Token`'s address as a constructor argument.
+5. Provied the contract address of `BusinessLogic` to `ERC20Token` for whitelisting `BusinessLogic` to transfer funds.
 
 ## Usage
 
