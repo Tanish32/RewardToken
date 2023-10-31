@@ -43,7 +43,8 @@ contract BusinessLogic {
         uint256 discount = discountRate[msg.sender];
         uint256 finalPrice = originalPrice * (100 - discount) / 100;
 
-        require(msg.value >= finalPrice, "Insufficient funds sent");
+        //Validiating payment is legitimate
+        require(msg.value >= finalPrice, "Transaction not validate : Insufficient funds sent");
 
         // Transfer extra Ether back to the customer
         if (msg.value > finalPrice) {
@@ -64,24 +65,20 @@ contract BusinessLogic {
     }
 
     // To be called when a customer wants to use tokens for a discount . i.e to be called before purcaseProduct
-    function useDiscount() external {
+    function useDiscount(uint256 tokensToUse) external {
         require(reg[msg.sender]==true,"Caller not registered");
         uint256 tokenCount = tokenContract.balanceOf(msg.sender);
-        uint256 discount = 0;
-
+        require(tokenCount>=tokensToUse,"Not enough reward tokens!");
         // Calculate discount based on token count
-        if (tokenCount >= 20) {
-            discount = 25;
-        } else if (tokenCount >= 10) {
-            discount = 10;
+        if(tokensToUse>100){
+            tokensToUse=100;
         }
-
+        uint256 discount = tokensToUse;
         // Update discount rate
         discountRate[msg.sender] = discount;
 
         // Deduct tokens from customer and send to unspentAddress
-        require(tokenContract.transferFrom(msg.sender, unspentAddress, tokenCount), "Token transfer failed");
-
+        require(tokenContract.transferFrom(msg.sender, unspentAddress, tokensToUse), "Token transfer failed");
         emit DiscountUsed(msg.sender, discount);
     }
 }
