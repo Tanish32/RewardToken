@@ -26,7 +26,7 @@ contract ERC20Token {
     function businessLogicAddress(address _businessLogicContract) external onlyOwner{
         businessLogicContract = _businessLogicContract;
     }
-    
+
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
         require( _from == msg.sender || msg.sender == businessLogicContract,"Cannot use another person's funds");
         require(balanceOf[_from] >= _value);
