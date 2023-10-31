@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./ERC20Token.sol";  // Import the ERC20Token contract
+import "./ERC20Token.sol";  // Importing the ERC20Token contract
 
 contract BusinessLogic {
     ERC20Token public tokenContract;
     address public owner;
-    address public unspentAddress  = 0xdD870fA1b7C4700F2BD7f44238821C26f7392148;  // Burn or store address
+    address public unspentAddress  = 0xdD870fA1b7C4700F2BD7f44238821C26f7392148;  // unspent address
     mapping(address => bool) internal purchaseValidated;
     mapping(address => uint256) public discountRate;  // Maps customer address to discount rate
     mapping(address => bool)    public reg;
@@ -27,17 +27,15 @@ contract BusinessLogic {
 
     // Owner validates the purchase
     function validatePurchase(address customer, uint256 amount) internal {
-        // require(!purchaseValidated[customer], "Purchase already validated");
         if(purchaseValidated[customer] == true){
             require(tokenContract.transferFrom(owner, customer, amount), "Token transfer failed");
             emit TokensAwarded(customer, amount);
             payable(owner).transfer(address(this).balance);
             purchaseValidated[customer] = false;
         }
-        
     }
 
-    // To be called when a customer purchases a product
+    // To be called by customer to purchase a product
  function purchaseProduct() external payable {
         require(reg[msg.sender]==true,"Caller not registered");
         uint256 originalPrice = 1 ether;  // Assuming 1 product costs 1 Ether
@@ -65,21 +63,37 @@ contract BusinessLogic {
         reg[msg.sender] = true;
     }
 
-    // To be called when a customer wants to use tokens for a discount . i.e to be called before purcaseProduct
-    function useDiscount(uint256 tokensToUse) external {
+    // To be called when a customer wants to use tokens for a discount . i.e to be called before purchaseProduct
+    function useDiscount() external {
         require(reg[msg.sender]==true,"Caller not registered");
         uint256 tokenCount = tokenContract.balanceOf(msg.sender);
-        require(tokenCount>=tokensToUse,"Not enough reward tokens!");
+        uint256 discount = 0;
+
         // Calculate discount based on token count
-        if(tokensToUse>100){
-            tokensToUse=100;
+        uint256 tokensToUse =0;
+        // uint tokens
+        if (tokenCount >= 40) {
+            discount = 50;
+            tokensToUse = 40;
         }
-        uint256 discount = tokensToUse;
+        else if (tokenCount >= 30) {
+            discount = 40;
+            tokensToUse = 30;
+        }
+        else if (tokenCount >= 20) {
+            discount = 25;
+            tokensToUse = 20;
+        } else if (tokenCount >= 10) {
+            discount = 10;
+            tokensToUse = 10;
+        }
+
         // Update discount rate
         discountRate[msg.sender] = discount;
 
         // Deduct tokens from customer and send to unspentAddress
         require(tokenContract.transferFrom(msg.sender, unspentAddress, tokensToUse), "Token transfer failed");
+
         emit DiscountUsed(msg.sender, discount);
     }
 }
