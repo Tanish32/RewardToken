@@ -31,6 +31,7 @@ contract BusinessLogic {
         if(purchaseValidated[customer] == true){
             require(tokenContract.transferFrom(owner, customer, amount), "Token transfer failed");
             emit TokensAwarded(customer, amount);
+            payable(owner).transfer(address(this).balance);
             purchaseValidated[customer] = false;
         }
         
